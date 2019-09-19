@@ -26,7 +26,7 @@ namespace ServerInterfaces
             StringBuilder sb = new StringBuilder();
             foreach (var kvp in data)
             {
-                sb.AppendLine($"{kvp.Key}: {kvp.Value}");
+                sb.AppendLine($"{kvp.Key} = {kvp.Value}");
             }
             return sb.ToString();
         }

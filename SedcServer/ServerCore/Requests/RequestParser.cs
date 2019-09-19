@@ -11,6 +11,8 @@ namespace ServerCore.Requests
     {
         public static readonly Regex RequestLineRegex = new Regex(@"^([A-Z]+)\s\/([^\s?]*)\??([^\s]*)\sHTTP\/1\.1$");
         public static readonly Regex HeaderRegex = new Regex(@"^([^:]*):\s*(.*)$");
+        public static readonly Regex QueryRegex = new Regex(@"([^&\s]+)");
+        public static readonly Regex QueryKeyValuePair = new Regex(@"(\w)=(\w)");
 
         public Request Parse(string requestData)
         {
@@ -29,6 +31,22 @@ namespace ServerCore.Requests
 
             var path = match.Groups[2].Value;
             var query = match.Groups[3].Value;
+            var queryDictionary = new Dictionary<string, string>();
+
+            var qmatch = QueryRegex.Matches(query);
+            foreach (var qm in qmatch)
+            {
+                //var KeyVauePairmatch = qm.ToString();
+                var kvp = qm.ToString();
+
+                var KVPParsed = QueryKeyValuePair.Match(qm.ToString());
+
+                var key = KVPParsed.Groups[1].ToString();
+                var value = KVPParsed.Groups[2].ToString();
+                queryDictionary.Add(key, value);
+            }
+
+            ServerInterfaces.QueryCollection queryColl = new ServerInterfaces.QueryCollection(queryDictionary);
             // to-do: map headers, querystring, body, etc...
 
             var headerLines = lines.Skip(1).TakeWhile(line => !string.IsNullOrEmpty(line));
@@ -55,7 +73,7 @@ namespace ServerCore.Requests
             {
                 Method = method,
                 Path = path,
-                Query = query,
+                Query = queryColl.ToString(),
                 Headers = headers,
                 Body = body
             };
